@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat App</title>
+</head>
+<style>
+    html,
+    body {
+        height: 100vh;
+        margin: 0;
+        background-color: whitesmoke;
+    }
+
+    .list {}
+
+    .controls {
+        display: flex;
+        align-items: stretch;
+        justify-content: stretch;
+        width: 100vw;
+        height: 35px;
+    }
+
+    .nickname {}
+
+    .msg {
+        flex-grow: 1;
+    }
+
+    .submit {}
+
+    p {}
+
+    span {
+        font-weight: bold;
+    }
+</style>
+
+<body>
+    <div class="controls">
+        <input type="text" placeholder="nickname" class="nickname">
+        <input type="text" placeholder="type something" class="msg">
+        <button class="submit">Send</button>
+    </div>
+
+    <p class="typing"></p>
+
+    <h1 class="greeting"></h1>
+
+    <ul class="connected"> </ul>
+    <div class="list">
+    </div>
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io()
+        let myTimeOut;
+        let name = prompt("Enter your nickname pls")
+        const nick = document.querySelector('.nickname')
+        const text = document.querySelector('.msg')
+
+        socket.emit('i have a name', name)
+
+        document.querySelector('.submit').addEventListener('click', (e) => {
+            socket.emit('message', { text: text.value, nick: nick.value })
+            drawNewMsg({ nick: "me", text: text.value })
+        })
+
+        document.querySelector('.msg').addEventListener('keydown', (e) => {
+            socket.emit('typing', { nick: nick.value || "unkown" })
+        })
+
+        socket.on('knock knock', (e) => {
+            drawNewMsg(e)
+        })
+
+        socket.on('welcome', (e) => {
+            document.querySelector('.greeting').textContent = `Welcome ${e}`
+            setTimeout(() => {
+                document.querySelector('.greeting').textContent = ''
+            }, 1500);
+        })
+
+        socket.on('bye bye', (e) => {
+            document.querySelector('.greeting').textContent = `Bye Bye ${e}`
+            setTimeout(() => {
+                document.querySelector('.greeting').textContent = ''
+            }, 1500);
+        })
+
+        socket.on('someone is typing', (e) => {
+            const typing = document.querySelector('.typing')
+            typing.textContent = `${e.nick || 'Unkown'} is typing`
+            clearTimeout(myTimeOut)
+            myTimeOut = setTimeout(() => {
+                typing.textContent = ''
+            }, 1500);
+        })
+
+        function drawNewMsg(msg) {
+            const list = document.querySelector('.list')
+            // const span = document.createElement('span')
+            const p = document.createElement('p')
+            p.innerHTML = ` Nick: ${msg.nick || "unkonwn"} , MSG : ${msg.text}`
+            list.appendChild(p)
+        }
+
+    </script>
+</body>
+
+</html>
